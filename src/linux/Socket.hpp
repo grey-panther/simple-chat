@@ -11,6 +11,7 @@ class Socket : public ISocket
 		OPEN,
 		SET_ADDR,
 		SEND,
+		RECEIVE,
 		CLOSE
 	};
 
@@ -24,6 +25,8 @@ public:
 	void set_address(const ISocketAddress& address) override;
 
 	void send_to(const std::string& message, const ISocketAddress& address) const override;
+
+	std::string receive() const override;
 
 private:
 	static void handle_error(SocketErrorGroup group, int error_code, std::string info = "");

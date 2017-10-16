@@ -17,6 +17,8 @@ public:
 	virtual void set_address(const ISocketAddress& address) = 0;
 
 	virtual void send_to(const std::string& message, const ISocketAddress& address) const = 0;
+
+	virtual std::string receive() const = 0;
 };
 
 #endif

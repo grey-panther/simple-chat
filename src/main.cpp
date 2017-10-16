@@ -21,6 +21,7 @@ int main()
 	other_socket->set_address(addr_2);
 
 	socket->send_to("foobar", addr_2);
+	other_socket->receive();
 
 	return 0;
 }

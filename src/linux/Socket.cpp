@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
+#include <memory>
 
 
 Socket::Socket()
@@ -45,6 +46,21 @@ void Socket::send_to(const std::string& message, const ISocketAddress& address) 
 }
 
 
+std::string Socket::receive() const
+{
+	static const std::size_t DATA_SIZE = 100;
+	std::shared_ptr<char> data(new char[DATA_SIZE]);
+
+	ssize_t err = recvfrom(_socket, data.get(), DATA_SIZE, 0, 0, 0);
+
+	if (err == -1) {
+		handle_error(SocketErrorGroup::RECEIVE, errno);
+	}
+
+	return std::string(data.get(), DATA_SIZE);
+}
+
+
 void Socket::handle_error(SocketErrorGroup group, int error_code, std::string info)
 {
 	std::string action;
@@ -57,6 +73,9 @@ void Socket::handle_error(SocketErrorGroup group, int error_code, std::string in
 			break;
 		case (SocketErrorGroup::SEND):
 			action = "send message to " + info;
+			break;
+		case (SocketErrorGroup::RECEIVE):
+			action = "receive message";
 			break;
 		case (SocketErrorGroup::CLOSE):
 			action = "close socket";
