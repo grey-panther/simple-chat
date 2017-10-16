@@ -1,17 +1,17 @@
 #include "Socket.hpp"
+#include "Logger.hpp"
+#include <cstring>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
-#include <Logger.hpp>
-#include <errors/SocketError.hpp>
 
 
 Socket::Socket()
 {
-	_socket = socket(PF_INET, SOCK_STREAM, 0);
+	_socket = socket(PF_INET, SOCK_DGRAM, 0);
 
-	if (_socket < 0) {
-		Logger::channel(ERR) << "Couldn't create socket. Error code: " << errno;
+	if (_socket == -1) {
+		handle_error(SocketErrorGroup::OPEN, errno);
 	}
 }
 
@@ -20,82 +20,52 @@ Socket::~Socket()
 {
 	int close_result = close(_socket);
 
-	if (close_result < 0) {
-		Logger::channel(ERR) << "Couldn't destroy socket. Error code: " << errno;
+	if (close_result == -1) {
+		handle_error(SocketErrorGroup::CLOSE, errno);
 	}
 }
 
-
-void Socket::bind()
+void Socket::set_address(const ISocketAddress& address)
 {
-	// TODO: implement
-}
+	int error = bind(_socket, address.inet_sockaddr(), address.inet_sockaddr_size());
 
-
-// TODO Решить, буду ли использовать нижележащий код
-enum class SocketErrorGroup {
-	OPEN,
-	CLOSE
-};
-
-
-void handle_socket_error(SocketErrorGroup error_group, int error_id) {
-	std::string message;
-
-	switch (error_group) {
-		case SocketErrorGroup::OPEN:
-			switch (error_id) {
-				case EACCES:
-					message = "EACCES";
-					break;
-				case EAFNOSUPPORT:
-					message = "EAFNOSUPPORT";
-					break;
-				case EINVAL:
-					message = "EINVAL";
-					break;
-				case EMFILE:
-					message = "EMFILE";
-					break;
-				case ENFILE:
-					message = "ENFILE";
-					break;
-				case ENOBUFS:
-					message = "ENOBUFS";
-					break;
-				case ENOMEM:
-					message = "ENOMEM";
-					break;
-				case EPROTONOSUPPORT:
-					message = "EPROTONOSUPPORT";
-					break;
-				default:
-					message = "unknown error " + error_id;
-					break;
-			}
-			break;
-
-		case SocketErrorGroup::CLOSE:
-			switch (error_id) {
-				case EBADF:
-					message = "EBADF";
-					break;
-				case EINTR:
-					message = "EINTR";
-					break;
-				case EIO:
-					message = "EIO";
-					break;
-				default:
-					message = "unknown error " + error_id;
-					break;
-			}
-			break;
-
-		default:
-			message = "Unknown error group";
-			break;
+	if (error == -1) {
+		handle_error(SocketErrorGroup::SET_ADDR, errno);
 	}
-
-	Logger::channel(ERROR) << "Socket error: " << message;
 }
+
+
+void Socket::send_to(const std::string& message, const ISocketAddress& address) const
+{
+	ssize_t err = sendto(_socket, message.c_str(), message.size(), 0, address.inet_sockaddr(), address.inet_sockaddr_size());
+
+	if (err == -1) {
+		handle_error(SocketErrorGroup::SEND, errno, address);
+	}
+}
+
+
+void Socket::handle_error(SocketErrorGroup group, int error_code, std::string info)
+{
+	std::string action;
+	switch (group) {
+		case (SocketErrorGroup::OPEN):
+			action = "open socket";
+			break;
+		case (SocketErrorGroup::SET_ADDR):
+			action = "set socket address";
+			break;
+		case (SocketErrorGroup::SEND):
+			action = "send message to " + info;
+			break;
+		case (SocketErrorGroup::CLOSE):
+			action = "close socket";
+			break;
+		default:
+			action = "do unknown action";
+	}
+	Logger::channel(ERR) << "Couldn't " << action << '.' << std::endl
+						 << "\tError code: " << error_code << std::endl
+						 << "\tDescription: " << strerror(error_code);
+}
+

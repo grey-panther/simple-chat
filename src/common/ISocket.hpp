@@ -2,6 +2,9 @@
 #define SIMPLE_CHAT_ISOCKET_HPP
 
 
+#include "ISocketAddress.hpp"
+
+
 class ISocket
 {
 public:
@@ -9,8 +12,11 @@ public:
 	ISocket(ISocket&) = delete;
 	ISocket& operator=(ISocket&) = delete;
 
-	virtual void bind() = 0;
 	virtual ~ISocket() {};
+
+	virtual void set_address(const ISocketAddress& address) = 0;
+
+	virtual void send_to(const std::string& message, const ISocketAddress& address) const = 0;
 };
 
 #endif
