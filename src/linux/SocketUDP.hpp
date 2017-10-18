@@ -1,8 +1,8 @@
-#ifndef SIMPLE_CHAT_SOCKET_HPP
-#define SIMPLE_CHAT_SOCKET_HPP
+#ifndef SIMPLE_CHAT_SOCKETUDP_HPP
+#define SIMPLE_CHAT_SOCKETUDP_HPP
 
-#include <ISocketUDP.hpp>
-#include <SocketBase.hpp>
+#include "ISocketUDP.hpp"
+#include "SocketBase.hpp"
 
 
 class SocketUDP : public ISocketUDP, protected SocketBase

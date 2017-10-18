@@ -1,20 +1,25 @@
-#include <ISocket.hpp>
-#include <Logger.hpp>
-#include <SocketUDP.hpp>
-#include <SocketAddress.hpp>
+#include "ISocket.hpp"
+#include "SocketAddress.hpp"
+#include "SocketTCP.hpp"
+#include "SocketUDP.hpp"
+#include "Logger.hpp"
 #include <memory>
 
 
 typedef std::shared_ptr<ISocket> ISocketSPtr;
 typedef std::shared_ptr<ISocketUDP> ISocketUDPSPtr;
+typedef std::shared_ptr<ISocketTCP> ISocketTCPSPtr;
 
 
 void test_udp();
+
+void test_tcp();
 
 
 int main()
 {
 	test_udp();
+	test_tcp();
 
 	return 0;
 }
@@ -37,4 +42,43 @@ void test_udp()
 	std::string received_msg = other_socket->receive();
 
 	Logger::channel(INFO) << "Received UDP message: " << received_msg;
+
+	if (sending_msg != received_msg) {
+		Logger::channel(ERR) << "Received message not equal to sending message!";
+	}
+}
+
+
+void test_tcp()
+{
+	ISocketTCPSPtr connections_listener(new SocketTCP);
+	SocketAddress server_addr = SocketAddress("127.0.0.1", 4244);
+	connections_listener->set_address(server_addr);
+
+	ISocketTCPSPtr server_last_client;    // Последний клиент, постучавшийся в сервер.
+	connections_listener->listen(
+			[&server_last_client](ISocketTCPSPtr connected_socket) {
+				server_last_client = connected_socket;
+			}
+	);
+
+	ISocketTCPSPtr some_client(new SocketTCP);
+	some_client->connect(server_addr);
+
+	if (!server_last_client) {
+		Logger::channel(ERR) << "Server hasn't accepted client connection!";
+		return;
+	}
+
+	const std::string sending_msg = "foobar tcp";
+	Logger::channel(INFO) << "Sending TCP message: " << sending_msg;
+
+	some_client->send(sending_msg);
+	std::string received_msg = server_last_client->receive();
+
+	Logger::channel(INFO) << "Received TCP message: " << received_msg;
+
+	if (sending_msg != received_msg) {
+		Logger::channel(ERR) << "Received message not equal to sending message!";
+	}
 }
