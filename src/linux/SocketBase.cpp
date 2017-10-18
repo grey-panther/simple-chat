@@ -1,15 +1,13 @@
-#include "Socket.hpp"
+#include "SocketBase.hpp"
 #include "Logger.hpp"
 #include <cstring>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <cerrno>
-#include <memory>
 
 
-Socket::Socket()
+SocketBase::SocketBase(__socket_type socket_type)
 {
-	_socket = socket(PF_INET, SOCK_DGRAM, 0);
+	_socket = socket(PF_INET, socket_type, 0);
 
 	if (_socket == -1) {
 		handle_error(SocketErrorGroup::OPEN, errno);
@@ -17,7 +15,7 @@ Socket::Socket()
 }
 
 
-Socket::~Socket()
+SocketBase::~SocketBase()
 {
 	int close_result = close(_socket);
 
@@ -26,7 +24,8 @@ Socket::~Socket()
 	}
 }
 
-void Socket::set_address(const ISocketAddress& address)
+
+void SocketBase::set_address_impl(const ISocketAddress& address)
 {
 	int error = bind(_socket, address.inet_sockaddr(), address.inet_sockaddr_size());
 
@@ -36,32 +35,7 @@ void Socket::set_address(const ISocketAddress& address)
 }
 
 
-void Socket::send_to(const std::string& message, const ISocketAddress& address) const
-{
-	ssize_t err = sendto(_socket, message.c_str(), message.size(), 0, address.inet_sockaddr(), address.inet_sockaddr_size());
-
-	if (err == -1) {
-		handle_error(SocketErrorGroup::SEND, errno, address);
-	}
-}
-
-
-std::string Socket::receive() const
-{
-	static const std::size_t DATA_SIZE = 100;
-	std::shared_ptr<char> data(new char[DATA_SIZE]);
-
-	ssize_t err = recvfrom(_socket, data.get(), DATA_SIZE, 0, 0, 0);
-
-	if (err == -1) {
-		handle_error(SocketErrorGroup::RECEIVE, errno);
-	}
-
-	return std::string(data.get(), DATA_SIZE);
-}
-
-
-void Socket::handle_error(SocketErrorGroup group, int error_code, std::string info)
+void SocketBase::handle_error(SocketErrorGroup group, int error_code, std::string info)
 {
 	std::string action;
 	switch (group) {
@@ -87,4 +61,3 @@ void Socket::handle_error(SocketErrorGroup group, int error_code, std::string in
 						 << "\tError code: " << error_code << std::endl
 						 << "\tDescription: " << strerror(error_code);
 }
-

@@ -1,27 +1,40 @@
 #include <ISocket.hpp>
 #include <Logger.hpp>
-#include <Socket.hpp>
+#include <SocketUDP.hpp>
 #include <SocketAddress.hpp>
 #include <memory>
 
 
 typedef std::shared_ptr<ISocket> ISocketSPtr;
+typedef std::shared_ptr<ISocketUDP> ISocketUDPSPtr;
+
+
+void test_udp();
 
 
 int main()
 {
-	Logger::channel(INFO) << "Hello";
+	test_udp();
 
-	ISocketSPtr socket(new Socket);
+	return 0;
+}
+
+
+void test_udp()
+{
+	ISocketUDPSPtr socket(new SocketUDP);
 	SocketAddress addr_1("127.0.0.1", 4242);
 	socket->set_address(addr_1);
 
-	ISocketSPtr other_socket(new Socket);
+	ISocketUDPSPtr other_socket(new SocketUDP);
 	SocketAddress addr_2("127.0.0.1", 4243);
 	other_socket->set_address(addr_2);
 
-	socket->send_to("foobar", addr_2);
-	other_socket->receive();
+	const std::string sending_msg = "foobar";
+	Logger::channel(INFO) << "Sending UDP message: " << sending_msg;
 
-	return 0;
+	socket->send_to(sending_msg, addr_2);
+	std::string received_msg = other_socket->receive();
+
+	Logger::channel(INFO) << "Received UDP message: " << received_msg;
 }
