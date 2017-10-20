@@ -45,7 +45,9 @@ void test_udp()
 
 	if (sending_msg != received_msg) {
 		Logger::channel(ERR) << "Received message not equal to sending message!";
+		return;
 	}
+	Logger::channel(INFO) << "UDP test OK";
 }
 
 
@@ -55,7 +57,7 @@ void test_tcp()
 	SocketAddress server_addr = SocketAddress("127.0.0.1", 4244);
 	connections_listener->set_address(server_addr);
 
-	ISocketTCPSPtr server_last_client;    // Последний клиент, постучавшийся в сервер.
+	ISocketTCPSPtr server_last_client;    	// Last client which was accepted by server
 	connections_listener->listen(
 			[&server_last_client](ISocketTCPSPtr connected_socket) {
 				server_last_client = connected_socket;
@@ -65,10 +67,7 @@ void test_tcp()
 	ISocketTCPSPtr some_client(new SocketTCP);
 	some_client->connect(server_addr);
 
-	if (!server_last_client) {
-		Logger::channel(ERR) << "Server hasn't accepted client connection!";
-		return;
-	}
+	while(!server_last_client);				// Wait until server accept connection
 
 	const std::string sending_msg = "foobar tcp";
 	Logger::channel(INFO) << "Sending TCP message: " << sending_msg;
@@ -80,5 +79,7 @@ void test_tcp()
 
 	if (sending_msg != received_msg) {
 		Logger::channel(ERR) << "Received message not equal to sending message!";
+		return;
 	}
+	Logger::channel(INFO) << "TCP test OK";
 }

@@ -14,6 +14,9 @@ public:
 	SocketAddress(const std::string& ip = "127.0.0.1", unsigned short port = 4242);
 
 
+	SocketAddress(const sockaddr_in& address);
+
+
 	~SocketAddress() override
 	{};
 

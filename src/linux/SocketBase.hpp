@@ -12,6 +12,9 @@ protected:
 	{
 		OPEN,
 		SET_ADDR,
+		LISTEN,
+		CONNECT,
+		ACCEPT,
 		SEND,
 		RECEIVE,
 		CLOSE
@@ -21,6 +24,13 @@ protected:
 
 protected:
 	SocketBase(__socket_type socket_type);
+
+	/**
+	 * \brief Create socket by already existed socket handle.
+	 * \param socket Socket handle.
+	 */
+	SocketBase(int socket) : _socket(socket)
+	{}
 
 	virtual ~SocketBase();
 

@@ -12,6 +12,12 @@ SocketAddress::SocketAddress(const std::string& ip, unsigned short port)
 }
 
 
+SocketAddress::SocketAddress(const sockaddr_in& address)
+		: _address(address)
+{
+}
+
+
 std::string SocketAddress::ip() const
 {
 	return inet_ntoa(_address.sin_addr);

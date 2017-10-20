@@ -10,10 +10,10 @@
 class ISocketTCP : public ISocket
 {
 public:
-	typedef std::function<void (std::shared_ptr<ISocketTCP>)> on_accept_connection_callback_t;
+	typedef std::function<void(std::shared_ptr<ISocketTCP>)> on_accept_connection_callback_t;
 
 public:
-	virtual void listen(on_accept_connection_callback_t on_accept_connection) = 0;
+	virtual void listen(const on_accept_connection_callback_t& on_accept_connection) = 0;
 
 	virtual void connect(const ISocketAddress& server_address) = 0;
 

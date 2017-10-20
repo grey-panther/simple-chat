@@ -45,6 +45,15 @@ void SocketBase::handle_error(SocketErrorGroup group, int error_code, std::strin
 		case (SocketErrorGroup::SET_ADDR):
 			action = "set socket address";
 			break;
+		case (SocketErrorGroup::LISTEN):
+			action = "start listening";
+			break;
+		case (SocketErrorGroup::CONNECT):
+			action = "connect to " + info;
+			break;
+		case (SocketErrorGroup::ACCEPT):
+			action = "accept connection";
+			break;
 		case (SocketErrorGroup::SEND):
 			action = "send message to " + info;
 			break;
