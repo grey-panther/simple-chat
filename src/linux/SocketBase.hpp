@@ -14,6 +14,7 @@ protected:
 		SET_ADDR,
 		LISTEN,
 		CONNECT,
+		POLL,
 		ACCEPT,
 		SEND,
 		RECEIVE,

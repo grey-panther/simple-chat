@@ -51,6 +51,9 @@ void SocketBase::handle_error(SocketErrorGroup group, int error_code, std::strin
 		case (SocketErrorGroup::CONNECT):
 			action = "connect to " + info;
 			break;
+		case (SocketErrorGroup::POLL):
+			action = "poll socket";
+			break;
 		case (SocketErrorGroup::ACCEPT):
 			action = "accept connection";
 			break;

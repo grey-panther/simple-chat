@@ -1,14 +1,16 @@
 #include "ISocket.hpp"
 #include "SocketAddress.hpp"
-#include "SocketTCP.hpp"
+#include "ClientSocketTCP.hpp"
 #include "SocketUDP.hpp"
+#include "ServerSocketTCP.hpp"
 #include "Logger.hpp"
 #include <memory>
 
 
 typedef std::shared_ptr<ISocket> ISocketSPtr;
 typedef std::shared_ptr<ISocketUDP> ISocketUDPSPtr;
-typedef std::shared_ptr<ISocketTCP> ISocketTCPSPtr;
+typedef std::shared_ptr<IClientSocketTCP> IClientSocketTCPSPtr;
+typedef std::shared_ptr<IServerSocketTCP> IServerSocketTCPSPtr;
 
 
 void test_udp();
@@ -53,18 +55,18 @@ void test_udp()
 
 void test_tcp()
 {
-	ISocketTCPSPtr connections_listener(new SocketTCP);
-	SocketAddress server_addr = SocketAddress("127.0.0.1", 4244);
+	IServerSocketTCPSPtr connections_listener(new ServerSocketTCP);
+	SocketAddress server_addr = SocketAddress("127.0.0.1", 4246);
 	connections_listener->set_address(server_addr);
 
-	ISocketTCPSPtr server_last_client;    	// Last client which was accepted by server
+	IClientSocketTCPSPtr server_last_client;    	// Last client which was accepted by server
 	connections_listener->listen(
-			[&server_last_client](ISocketTCPSPtr connected_socket) {
+			[&server_last_client](IClientSocketTCPSPtr connected_socket) {
 				server_last_client = connected_socket;
 			}
 	);
 
-	ISocketTCPSPtr some_client(new SocketTCP);
+	IClientSocketTCPSPtr some_client(new ClientSocketTCP);
 	some_client->connect(server_addr);
 
 	while(!server_last_client);				// Wait until server accept connection
