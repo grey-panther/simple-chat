@@ -11,19 +11,19 @@ Socket::Socket()
 	}
 	++_socketsCount;
 
-	// Create socket
+	// Create sockets
 	_socket = socket(PF_INET, SOCK_STREAM, 0);
 	if (_socket == INVALID_SOCKET) {
-		Logger::channel(ERR) << "Couldn't create socket. Error code: " << WSAGetLastError();
+		Logger::channel(ERR) << "Couldn't create sockets. Error code: " << WSAGetLastError();
 	}
 }
 
 
 Socket::~Socket()
 {
-	// Close socket
+	// Close sockets
 	if (FAILED(closesocket(_socket))) {
-		Logger::channel(ERR) << "Couldn't destroy socket. Error code: " << WSAGetLastError();
+		Logger::channel(ERR) << "Couldn't destroy sockets. Error code: " << WSAGetLastError();
 	}
 
 	--_socketsCount;

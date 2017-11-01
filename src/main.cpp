@@ -1,17 +1,18 @@
-#include "ISocket.hpp"
-#include "SocketAddress.hpp"
-#include "ClientSocketTCP.hpp"
-#include "SocketUDP.hpp"
-#include "ServerSocketTCP.hpp"
+#include "sockets/ISocket.hpp"
+#include "sockets/SocketAddress.hpp"
+#include "sockets/ClientSocketTCP.hpp"
+#include "sockets/SocketUDP.hpp"
+#include "sockets/ServerSocketTCP.hpp"
 #include "Logger.hpp"
 #include <memory>
 
 
-typedef std::shared_ptr<ISocket> ISocketSPtr;
-typedef std::shared_ptr<ISocketUDP> ISocketUDPSPtr;
-typedef std::shared_ptr<IClientSocketTCP> IClientSocketTCPSPtr;
-typedef std::shared_ptr<IServerSocketTCP> IServerSocketTCPSPtr;
+typedef std::shared_ptr<sockets::ISocket> ISocketSPtr;
+typedef std::shared_ptr<sockets::ISocketUDP> ISocketUDPSPtr;
+typedef std::shared_ptr<sockets::IClientSocketTCP> IClientSocketTCPSPtr;
+typedef std::shared_ptr<sockets::IServerSocketTCP> IServerSocketTCPSPtr;
 
+using namespace sockets;
 
 void test_udp();
 

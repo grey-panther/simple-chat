@@ -1,7 +1,7 @@
 #ifndef SIMPLE_CHAT_SOCKET_HPP
 #define SIMPLE_CHAT_SOCKET_HPP
 
-#include <ISocket.hpp>
+#include <sockets/ISocket.hpp>
 #include <winsock.h>
 
 
