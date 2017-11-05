@@ -7,8 +7,7 @@
 enum LogChanel {
 	INFO,
 	WARN,
-	ERROR,
-	ERR		// Same as ERROR
+	ERR
 };
 
 
@@ -27,7 +26,6 @@ private:
 				return "INFO";
 			case LogChanel::WARN:
 				return "WARN";
-			case LogChanel::ERROR:
 			case LogChanel::ERR:
 				return "ERROR";
 		}

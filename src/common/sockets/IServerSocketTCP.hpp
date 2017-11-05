@@ -1,8 +1,8 @@
 #ifndef SIMPLE_CHAT_ISERVERSOCKETTCP_HPP
 #define SIMPLE_CHAT_ISERVERSOCKETTCP_HPP
 
-#include "ISocket.hpp"
-#include "IClientSocketTCP.hpp"
+#include "sockets/ISocket.hpp"
+#include "sockets/IClientSocketTCP.hpp"
 #include <functional>
 #include <memory>
 

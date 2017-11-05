@@ -14,13 +14,18 @@ message("Target platform: " ${TARGET_BUILD_PLATFORM})
 # Add root paths for includes (and for CLion)
 include_directories(src/common src/${TARGET_BUILD_PLATFORM})
 
+# Headers for using std::thread on WIN32 platform
+if(WIN32)
+    include_directories(libs/mingw-std-threads)
+endif()
+
 # Add files for compilation
 file(GLOB_RECURSE COMMON_SOURCES src/common/*.hpp src/common/*.cpp)
 file(GLOB_RECURSE PLATFORM_SOURCES src/${TARGET_BUILD_PLATFORM}/*.hpp src/${TARGET_BUILD_PLATFORM}/*.cpp)
 add_executable(simple_chat src/main.cpp ${COMMON_SOURCES} ${PLATFORM_SOURCES})
 
 # Link threads support library
-target_link_libraries(simple_chat pthread)
+#target_link_libraries(simple_chat pthread)
 
 # Link platform libraries
 if(WIN32)
