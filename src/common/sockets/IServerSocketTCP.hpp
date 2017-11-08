@@ -15,6 +15,9 @@ namespace sockets
 		typedef std::function<void(std::shared_ptr<IClientSocketTCP>)> on_accept_connection_callback_t;
 
 	public:
+		IServerSocketTCP(TasksProcessor& tasks_processor) : ISocket(tasks_processor)
+		{}
+
 		virtual void listen(const on_accept_connection_callback_t& on_accept_connection) = 0;
 	};
 }

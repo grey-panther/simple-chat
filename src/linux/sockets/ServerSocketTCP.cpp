@@ -58,17 +58,10 @@ namespace sockets
 			}
 
 			// Do accept() immediately, because POLLIN event has happened.
-			sockaddr_in in_addr;
-			socklen_t in_addr_len;
-			const int socket_handle = ::accept(_socket, reinterpret_cast<sockaddr*>(&in_addr), &in_addr_len);
+			const int socket_handle = ::accept(_socket, nullptr, nullptr);
 			if (socket_handle == -1) {
 				handle_error(SocketErrorGroup::ACCEPT, errno);
 				return;
-			}
-
-			// It can be useful to check accepted sockets address (in_addr) here.
-			if (in_addr_len != sizeof(struct sockaddr_in)) {
-				Logger::channel(WARN) << "Accepted sockets address is not 'sockaddr_in'!";
 			}
 
 			std::shared_ptr<IClientSocketTCP> accepted_socket(new ClientSocketTCP(socket_handle));

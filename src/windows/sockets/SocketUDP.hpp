@@ -10,8 +10,9 @@ namespace sockets
 	class SocketUDP : public ISocketUDP, protected SocketBase
 	{
 	public:
-		SocketUDP()
+		SocketUDP(TasksProcessor& tasks_processor)
 				: SocketBase(SOCK_DGRAM)
+				, ISocketUDP(tasks_processor)
 		{}
 
 

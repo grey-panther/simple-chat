@@ -4,18 +4,21 @@
 #include "sockets/IServerSocketTCP.hpp"
 #include "sockets/SocketBase.hpp"
 #include <mingw.thread.h> // Is used instead of <thread> that is not supported with default mingw.
+#include <atomic>
 
 
 namespace sockets
 {
-	class ServerSocketTCP : protected SocketBase, public IServerSocketTCP
+	// TODO enable shared в базовый класс
+	class ServerSocketTCP : protected SocketBase, public IServerSocketTCP, public std::enable_shared_from_this<ServerSocketTCP>
 	{
-		std::shared_ptr<std::thread> _listening_thread;
-		bool _is_listening;
+		std::shared_ptr<std::thread> _listen_thread;
+		std::atomic<bool> _is_listening;
 
 	public:
-		ServerSocketTCP()
+		ServerSocketTCP(TasksProcessor& tasks_processor)
 				: SocketBase(SOCK_STREAM)
+				, IServerSocketTCP(tasks_processor)
 				, _is_listening(false)
 		{
 		}
@@ -31,7 +34,7 @@ namespace sockets
 		void listen(const on_accept_connection_callback_t& on_accept_connection) override;
 
 	private:
-		void do_listening(const on_accept_connection_callback_t& on_accept_connection);
+		void do_listen(const on_accept_connection_callback_t& on_accept_connection);
 	};
 }
 

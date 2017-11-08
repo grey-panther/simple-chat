@@ -23,11 +23,15 @@ endif()
 file(GLOB_RECURSE COMMON_SOURCES src/common/*.hpp src/common/*.cpp)
 file(GLOB_RECURSE PLATFORM_SOURCES src/${TARGET_BUILD_PLATFORM}/*.hpp src/${TARGET_BUILD_PLATFORM}/*.cpp)
 add_executable(simple_chat src/main.cpp ${COMMON_SOURCES} ${PLATFORM_SOURCES})
+add_executable(chat_server src/server_main.cpp ${COMMON_SOURCES} ${PLATFORM_SOURCES})
+add_executable(chat_client src/client_main.cpp ${COMMON_SOURCES} ${PLATFORM_SOURCES})
 
 # Link threads support library
 #target_link_libraries(simple_chat pthread)
 
 # Link platform libraries
 if(WIN32)
-    target_link_libraries(simple_chat ws2_32) # wsock32 ещё есть
+    target_link_libraries(simple_chat ws2_32)
+    target_link_libraries(chat_server ws2_32)
+    target_link_libraries(chat_client ws2_32)
 endif()

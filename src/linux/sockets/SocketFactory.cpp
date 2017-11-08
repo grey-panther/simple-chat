@@ -8,17 +8,17 @@ namespace sockets
 	namespace factory
 	{
 		template<>
-		IServerSocketTCP* make<IServerSocketTCP>(TasksProcessor& task_processor, const ISocketAddress& address)
+		IServerSocketTCP* make<IServerSocketTCP>(const ISocketAddress& address)
 		{
-			IServerSocketTCP* socket = new ServerSocketTCP(task_processor);
+			IServerSocketTCP* socket = new ServerSocketTCP;
 			socket->set_address(address);
 			return socket;
 		}
 
 		template<>
-		IClientSocketTCP* make<IClientSocketTCP>(TasksProcessor& task_processor, const ISocketAddress& address)
+		IClientSocketTCP* make<IClientSocketTCP>(const ISocketAddress& address)
 		{
-			return new ClientSocketTCP(task_processor);
+			return new ClientSocketTCP;
 		}
 
 

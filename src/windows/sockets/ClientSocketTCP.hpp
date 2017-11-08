@@ -4,24 +4,30 @@
 #include "sockets/IClientSocketTCP.hpp"
 #include "sockets/SocketBase.hpp"
 #include <mingw.thread.h> // Is used instead of <thread> that is not supported with default mingw.
+#include <atomic>
 
 
 namespace sockets
 {
 	class ClientSocketTCP : public IClientSocketTCP, protected SocketBase
 	{
-		std::shared_ptr<std::thread> _reading_thread;
-		bool _is_reading;
+		std::shared_ptr<std::thread> _read_thread;
+		std::atomic<bool> _is_reading;
+//		char* _read_data;
+//		std::size_t _read_data_size;
+//		on_complete_callback_t _on_read_complete;
 
 	public:
-		ClientSocketTCP()
+		ClientSocketTCP(TasksProcessor& tasks_processor)
 				: SocketBase(SOCK_STREAM)
+				, IClientSocketTCP(tasks_processor)
 				, _is_reading(false)
 		{}
 
 
-		ClientSocketTCP(SOCKET socket)
+		ClientSocketTCP(TasksProcessor& tasks_processor, SOCKET socket)
 				: SocketBase(socket)
+				, IClientSocketTCP(tasks_processor)
 				, _is_reading(false)
 		{}
 
@@ -33,13 +39,13 @@ namespace sockets
 		{ return set_address_impl(address); }
 
 
-		void connect(const ISocketAddress& server_address) override;
+		void connect(const ISocketAddress& server_address, const on_complete_callback_t& on_complete) override;
 
 
-		void send(const std::string& message) override;
+		void send(const std::string& message) override {};
 
 
-		std::string receive() const override;
+		std::string receive() const override {};
 
 
 		void read(char* data, const std::size_t size, const on_complete_callback_t& on_complete) override;
@@ -48,7 +54,8 @@ namespace sockets
 		void write(const char* data, const std::size_t size, const on_complete_callback_t& on_complete) const override;
 
 	private:
-		void do_reading(char* data, const std::size_t size, const on_complete_callback_t& on_complete);
+		void do_read(char* data, const std::size_t data_size,
+					 const IClientSocketTCP::on_complete_callback_t& on_complete);
 	};
 }
 

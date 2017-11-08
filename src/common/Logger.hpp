@@ -2,9 +2,16 @@
 #define SIMPLE_CHAT_LOGGER_HPP
 
 #include <iostream>
+#include <sstream>
+#ifdef WIN32
+#include <mingw.mutex.h>
+#else
+#include <mutex>
+#endif
 
 
-enum LogChanel {
+enum LogChanel
+{
 	INFO,
 	WARN,
 	ERR
@@ -12,26 +19,28 @@ enum LogChanel {
 
 
 class Logger {
+	struct Message : public std::stringstream
+	{
+		Message() = default;
+
+		Message(Message&&);
+
+		~Message() override;
+	};
+
+	static std::mutex cout_mutex;
+	static bool _enabled;
+
 public:
-	static std::ostream& channel(LogChanel ch) {
-		std::cout << std::endl;
-		std::cout << '(' << getChanelMessage(ch) << ")\t";
-		return std::cout;
-	}
+	static Message channel(const LogChanel& chanel);
+
+	static void set_enabled(const bool value)
+	{ _enabled = value; }
 
 private:
-	static std::string getChanelMessage(LogChanel ch) {
-		switch (ch) {
-			case LogChanel::INFO:
-				return "INFO";
-			case LogChanel::WARN:
-				return "WARN";
-			case LogChanel::ERR:
-				return "ERROR";
-		}
+	static void print(const Message& msg);
 
-		return "";
-	}
+	static std::string get_description(const LogChanel& chanel);
 };
 
 #endif

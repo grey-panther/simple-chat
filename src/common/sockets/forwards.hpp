@@ -6,13 +6,20 @@
 
 namespace sockets
 {
+	class ISocket;
+	typedef std::weak_ptr<ISocket> ISocketWPtr;
+
 	class ISocketAddress;
+	typedef std::shared_ptr<ISocketAddress> ISocketAddressSPtr;
 
 	class IClientSocketTCP;
 	typedef std::shared_ptr<IClientSocketTCP> IClientSocketTCPSPtr;
 
 	class IServerSocketTCP;
 	typedef std::shared_ptr<IServerSocketTCP> IServerSocketTCPSPtr;
+	typedef std::weak_ptr<IServerSocketTCP> IServerSocketTCPWPtr;
+
+	class TasksProcessor;
 }
 
 #endif

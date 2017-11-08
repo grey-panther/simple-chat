@@ -121,8 +121,8 @@ namespace sockets
 				nullptr
 		);
 
-		Logger::channel(ERR) << "Couldn't " << action << '.' << std::endl
-							 << "\tError code: " << error_code << std::endl
+		Logger::channel(ERR) << "Couldn't " << action << ".\n"
+							 << "\tError code: " << error_code << "\n"
 							 << "\tDescription: " << description;
 
 		LocalFree(description);		// Recommends to use function HeapFree(GetProcessHeap(), s) in win10 sdk.
