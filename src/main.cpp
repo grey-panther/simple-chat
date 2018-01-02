@@ -98,33 +98,40 @@ void test_chat()
 	ChatServer server(*server_addr);
 	std::thread s([&server] { server.run(); });
 
+	auto on_receive_msg = [](const int client_index, std::string* out_msg, const ChatMessageSPtr& message) {
+		Logger::channel(INFO) << "Client " << client_index << " got message: " << message->data();
+		*out_msg = std::string(message->data());
+	};
+	auto on_close_connection = [](const int client_index) {
+		Logger::channel(INFO) << "Client " << client_index << " closed connection.";
+	};
+
+	std::string* cl1_received_message = new std::string("empty1");
 	ChatClient client1(
 			server_addr,
-			[](const ChatMessageSPtr& message) {
-				Logger::channel(INFO) << "Client 1 got message: " << message->data();
-			},
-			[]() {
-				Logger::channel(INFO) << "Client 1 closed connection.";
-			}
+			std::bind(on_receive_msg, 1, cl1_received_message, std::placeholders::_1),
+			std::bind(on_close_connection, 1)
 	);
 	std::thread c1([&client1] { client1.run(); });
 
+	std::string* cl2_received_message = new std::string("empty2");
 	ChatClient client2(
 			server_addr,
-			[](const ChatMessageSPtr& message) {
-				Logger::channel(INFO) << "Client 2 got message: " << message->data();
-			},
-			[]() {
-				Logger::channel(INFO) << "Client 2 closed connection.";
-			}
+			std::bind(on_receive_msg, 2, cl2_received_message, std::placeholders::_1),
+			std::bind(on_close_connection, 2)
 	);
 	std::thread c2([&client2] { client2.run(); });
 
-	// Wait for connection
+	// Wait for clients connection
 	while (!client1.connected() || !client2.connected());
-	ChatMessageSPtr msg(new ChatMessage("Foo"));
+
+	// Send messages
+	const std::string cl1_sending_message = "Foo";
+	ChatMessageSPtr msg(new ChatMessage(cl1_sending_message));
 	client1.send(msg);
-	ChatMessageSPtr msg2(new ChatMessage("Bar"));
+
+	const std::string cl2_sending_message = "Bar";
+	ChatMessageSPtr msg2(new ChatMessage(cl2_sending_message));
 	client2.send(msg2);
 
 //	std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -136,12 +143,25 @@ void test_chat()
 //	c2.join();
 
 	std::this_thread::sleep_for(std::chrono::seconds(5));
-	Logger::channel(INFO) << "DESTRUCTION";
+	Logger::channel(INFO) << "STOPPING SERVER...";
 	server.stop();
 	s.join();
 
 	c1.join();
 	c2.join();
 
-	// TODO Compare strings that were sent and received.
+	// Check sent and received strings
+	if (cl1_sending_message != *cl2_received_message) {
+		Logger::channel(ERR) << "cl1_sending_message != cl2_received_message :\n"
+							 << "cl1_sending_message = " << cl1_sending_message << "\n"
+							 << "cl2_received_message = " << *cl2_received_message;
+	}
+	if (cl2_sending_message != *cl1_received_message) {
+		Logger::channel(ERR) << "cl2_sending_message != cl1_received_message :\n"
+							 << "cl2_sending_message = " << cl2_sending_message << "\n"
+							 << "cl1_received_message = " << *cl1_received_message;
+	}
+
+	delete cl1_received_message;
+	delete cl2_received_message;
 }

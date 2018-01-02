@@ -47,6 +47,8 @@ std::string Logger::get_description(const LogChanel& chanel)
 			return "WARN";
 		case LogChanel::ERR:
 			return "ERROR";
+		case LogChanel::DEBUG:
+			return "DEBUG";
 	}
 
 	return "";

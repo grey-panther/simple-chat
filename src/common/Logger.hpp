@@ -14,7 +14,8 @@ enum LogChanel
 {
 	INFO,
 	WARN,
-	ERR
+	ERR,
+	DEBUG
 };
 
 

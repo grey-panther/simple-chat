@@ -13,6 +13,7 @@ class ChatMessage
 public:
 	ChatMessage(const std::string& text = "")
 	{
+		memset(_data, 0, DATA_SIZE);
 		if (!text.empty()) {
 			memcpy(_data, text.data(), std::min(text.length(), length()));
 		}
