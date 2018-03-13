@@ -2,34 +2,34 @@
 #define SIMPLE_CHAT_CHATMESSAGE_HPP
 
 #include <string>
-#include <cstring>
+#include <array>
 
 
 class ChatMessage
 {
 	static const std::size_t DATA_SIZE = 100;
-	char _data[DATA_SIZE];
+	std::array<char, DATA_SIZE> _data;
 
 public:
-	ChatMessage(const std::string& text = "")
+	explicit ChatMessage(const std::string& text = "")
 	{
-		memset(_data, 0, DATA_SIZE);
+		_data.fill(0);
 		if (!text.empty()) {
-			memcpy(_data, text.data(), std::min(text.length(), length()));
+			text.copy(_data.data(), std::min(text.length(), _data.size()));
 		}
 	}
 
 	char* data()
 	{
-		return _data;
+		return _data.data();
 	}
 
 	const char* data() const
 	{
-		return _data;
+		return _data.data();
 	}
 
-	static std::size_t length() // TODO;
+	static std::size_t length() // TODO Messages with dynamic length;
 	{ return DATA_SIZE; }
 };
 

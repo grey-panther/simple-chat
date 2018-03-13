@@ -1,52 +1,46 @@
 #ifndef SIMPLE_CHAT_TASKSPROCESSOR_HPP
 #define SIMPLE_CHAT_TASKSPROCESSOR_HPP
 
-#include "sockets/forwards.hpp"
-#include "Logger.hpp"
+#include "sockets/ITasksQueue.hpp"
 #include <atomic>
-#include <queue>
+#include <memory>
+#include <list>
 #ifdef WIN32
 #include <mingw.mutex.h>
+#else
+#include <mutex.h>
 #endif
 
 
 namespace sockets
 {
-	class TasksProcessor
+	class TasksProcessor : public ITasksQueue
 	{
-		typedef std::function<void(void)> any_function_t;
-		typedef std::pair<ISocketWPtr, any_function_t> task_t; // TODO remove unused ISocketWPtr
+		typedef any_function_t task_t;
 		typedef std::shared_ptr<task_t> task_sptr_t;
 
-		std::queue<task_sptr_t> _tasks;
-		std::size_t _registered_sockets_count;
+		std::list<task_sptr_t> _tasks;
 		std::mutex _tasks_mutex;
 		task_sptr_t _current_task;
-		std::atomic<bool> _is_terminated;
+		std::atomic<bool> _is_stopped;
 
 	public:
-		TasksProcessor()
-				: _registered_sockets_count(0)
-				, _is_terminated(false)
-		{}
+		TasksProcessor();
 
-		inline void add_socket()
-		{ ++_registered_sockets_count; }
-
-		void remove_socket();
+		~TasksProcessor() override;
 
 		void run();
 
 		inline void stop()
-		{ _is_terminated = true; }
+		{ _is_stopped = true; }
 
-		inline bool terminated()
-		{ return _is_terminated; }
+		inline bool stopped()
+		{ return _is_stopped; }
 
-		void add_task(const ISocketWPtr& socket, const any_function_t& func);
+		void add_task(const any_function_t& func) override;
 
 	private:
-		void process(const task_sptr_t task);
+		void process(const task_sptr_t& task);
 	};
 }
 

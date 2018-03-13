@@ -9,31 +9,28 @@
 
 namespace sockets
 {
-	// TODO enable shared в базовый класс
-	class ServerSocketTCP : protected SocketBase, public IServerSocketTCP, public std::enable_shared_from_this<ServerSocketTCP>
+	class ServerSocketTCP : protected SocketBase, public IServerSocketTCP
 	{
-		std::shared_ptr<std::thread> _listen_thread;
+		std::shared_ptr<std::thread> _listening_thread;
 		std::atomic<bool> _is_listening;
 
 	public:
-		ServerSocketTCP(TasksProcessor& tasks_processor)
-				: SocketBase(SOCK_STREAM)
-				, IServerSocketTCP(tasks_processor)
-				, _is_listening(false)
-		{
-		}
-
+		explicit ServerSocketTCP(const ITasksQueueSPtr& tasks_queue);
 
 		~ServerSocketTCP() override;
 
-
 		void set_address(const ISocketAddress& address) override
-		{ return set_address_impl(address); }
-
+		{ return SocketBase::set_address(address); }
 
 		void listen(const on_accept_connection_callback_t& on_accept_connection) override;
 
 	private:
+		/**
+		 * @brief Listen connections in loop.
+		 * @details If a new connection is accepted,
+		 * a new client socket will be created and transferred to @a on_accept_connection callback.
+		 * @param on_accept_connection Callback that is called when a connection is accept.
+		 */
 		void do_listen(const on_accept_connection_callback_t& on_accept_connection);
 	};
 }

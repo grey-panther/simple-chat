@@ -1,10 +1,8 @@
 #ifndef SIMPLE_CHAT_ISERVERSOCKETTCP_HPP
 #define SIMPLE_CHAT_ISERVERSOCKETTCP_HPP
 
+#include "sockets/forwards.hpp"
 #include "sockets/ISocket.hpp"
-#include "sockets/IClientSocketTCP.hpp"
-#include <functional>
-#include <memory>
 
 
 namespace sockets
@@ -12,13 +10,18 @@ namespace sockets
 	class IServerSocketTCP : public ISocket
 	{
 	public:
-		typedef std::function<void(std::shared_ptr<IClientSocketTCP>)> on_accept_connection_callback_t;
+		typedef std::function<void(sockets::IClientSocketTCPSPtr)> on_accept_connection_callback_t;
 
 	public:
-		IServerSocketTCP(TasksProcessor& tasks_processor) : ISocket(tasks_processor)
-		{}
+		~IServerSocketTCP() override = default;
 
+		/**
+		 * @brief Start listening connections.
+		 * @param on_accept_connection Callback that is called when a connection is accept.
+		 */
 		virtual void listen(const on_accept_connection_callback_t& on_accept_connection) = 0;
+
+		// TODO Maybe it has sense to make method stop_listening();
 	};
 }
 

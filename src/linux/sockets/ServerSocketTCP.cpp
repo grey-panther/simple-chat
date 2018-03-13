@@ -66,8 +66,7 @@ namespace sockets
 
 			std::shared_ptr<IClientSocketTCP> accepted_socket(new ClientSocketTCP(socket_handle));
 
-			// TODO Вероятно, необходимо выполнить синхронизацию потоков для вызова колбэка
-			// (смотреть std::mutex, https://habrahabr.ru/post/182610/).
+			// TODO Use tasks queue to call callbacks.
 			on_accept_connection(accepted_socket);
 		}
 	}

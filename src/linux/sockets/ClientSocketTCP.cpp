@@ -40,7 +40,7 @@ namespace sockets
 		std::shared_ptr<char> data(new char[RECEIVED_DATA_SIZE]);
 
 		ssize_t received_size = recv(_socket, data.get(), RECEIVED_DATA_SIZE, 0);
-		// TODO: Realise receiving through a loop, because current realisation can miss trailing bytes of message.
+		// TODO: Do receiving through a loop, because current implementation can miss trailing bytes of message.
 
 		if (received_size == -1) {
 			handle_error(SocketErrorGroup::RECEIVE, errno);
@@ -104,7 +104,7 @@ namespace sockets
 			if (poll_data.revents & POLLIN) {
 				// Do recv() immediately, because POLLIN event has happened.
 				ssize_t received_size = recv(_socket, data, size, 0);
-				// TODO: Do receiving through a loop, because current realisation can miss trailing bytes of message.
+				// TODO: Do receiving through a loop, because current implementation can miss trailing bytes of message.
 				if (received_size == -1) {
 					handle_error(SocketErrorGroup::RECEIVE, errno);
 					break;
@@ -114,11 +114,8 @@ namespace sockets
 					break;
 				}
 
-				// TODO Вероятно, необходимо выполнить синхронизацию потоков для вызова колбэка
-				// (смотреть std::mutex, https://habrahabr.ru/post/182610/).
 				_is_reading = false;
-				// TODO надо как-то вызывать колбэк on_complete в основном потоке
-				// Типа сделать join текущего потока к основному и только потом выполнить колбэк.
+				// TODO Use tasks queue to call callbacks.
 				on_complete();
 				return;
 			}

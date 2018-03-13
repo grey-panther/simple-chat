@@ -13,9 +13,7 @@ namespace sockets
 	class ISocketAddress
 	{
 	public:
-		virtual ~ISocketAddress()
-		{}
-
+		virtual ~ISocketAddress() = default;
 
 		virtual std::string ip() const = 0;
 

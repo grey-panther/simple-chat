@@ -10,7 +10,7 @@ class SocketError : public std::exception
 	std::string _message;
 
 public:
-	SocketError(const std::string& message = "") noexcept
+	explicit SocketError(const std::string& message = "") noexcept
 			: std::exception()
 			, _message(message)
 	{

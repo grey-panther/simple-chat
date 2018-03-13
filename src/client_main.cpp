@@ -3,6 +3,7 @@
 #include "forwards.hpp"
 #include "ChatClient.hpp"
 #include "ChatMessage.hpp"
+#include "Logger.hpp"
 #ifdef WIN32
 #include <mingw.thread.h>
 #else

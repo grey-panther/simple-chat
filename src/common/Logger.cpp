@@ -14,8 +14,8 @@ Logger::Message::~Message()
 }
 
 
-std::mutex Logger::cout_mutex;
-bool Logger::_enabled = true;
+std::mutex Logger::__cout_mutex;
+bool Logger::__enabled = true;
 
 
 Logger::Message Logger::channel(const LogChanel& chanel)
@@ -29,12 +29,12 @@ Logger::Message Logger::channel(const LogChanel& chanel)
 
 void Logger::print(const Message& msg)
 {
-	if (!_enabled) {
+	if (!__enabled) {
 		return;
 	}
-	cout_mutex.lock();
+	__cout_mutex.lock();
 	std::cout << msg.str();
-	cout_mutex.unlock();
+	__cout_mutex.unlock();
 }
 
 

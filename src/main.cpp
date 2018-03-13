@@ -3,14 +3,13 @@
 #include "sockets/ClientSocketTCP.hpp"
 #include "sockets/SocketUDP.hpp"
 #include "sockets/ServerSocketTCP.hpp"
+#include "sockets/TasksProcessor.hpp"
+#include "ChatClient.hpp"
 #include "ChatServer.hpp"
 #include "ChatMessage.hpp"
 #include "Logger.hpp"
-#include <memory>
-#include "ChatClient.hpp"
+#include <vector>
 
-
-typedef std::shared_ptr<sockets::ISocketUDP> ISocketUDPSPtr;
 
 using namespace sockets;
 
@@ -24,7 +23,6 @@ int main()
 {
 //	test_udp();
 //	test_tcp();
-
 	test_chat();
 
 	return 0;
@@ -33,7 +31,7 @@ int main()
 
 void test_udp()
 {
-	TasksProcessor _tasks_processor;
+	TasksProcessorSPtr _tasks_processor(new TasksProcessor);
 	ISocketUDPSPtr socket(new SocketUDP(_tasks_processor));
 	SocketAddress addr_1("127.0.0.1", 4242);
 	socket->set_address(addr_1);
@@ -60,37 +58,56 @@ void test_udp()
 
 void test_tcp()
 {
-	TasksProcessor _tasks_processor;
-	IServerSocketTCPSPtr connections_listener(new ServerSocketTCP(_tasks_processor));
+	TasksProcessorSPtr tasks(new TasksProcessor);
+	std::thread tasks_thread([tasks] { tasks->run(); });
+
+	// Create a connections listener (a server socket).
+	IServerSocketTCPSPtr connections_listener(new ServerSocketTCP(tasks));
 	SocketAddress server_addr = SocketAddress("127.0.0.1", 4246);
 	connections_listener->set_address(server_addr);
 
-	IClientSocketTCPSPtr server_last_client;        // Last client which was accepted by server
+	// Create a server side socket;
+	IClientSocketTCPSPtr server_side_socket;
 	connections_listener->listen(
-			[&server_last_client](IClientSocketTCPSPtr connected_socket) {
-				server_last_client = connected_socket;
+			[&server_side_socket](IClientSocketTCPSPtr connected_socket) {
+				server_side_socket = connected_socket;
 			}
 	);
 
-	IClientSocketTCPSPtr some_client(new ClientSocketTCP(_tasks_processor));
-	some_client->connect(server_addr, [] (const bool) {});
+	// Create a client side socket and make a connection to the server.
+	IClientSocketTCPSPtr client_socket(new ClientSocketTCP(tasks));
+	client_socket->connect(server_addr, [] (const bool) {});
+	// Wait until the server accept connection.
+	while (!server_side_socket);
 
-	while (!server_last_client);                // Wait until server accept connection
-
+	// Send a message through socket.
 	const std::string sending_msg = "foobar tcp";
 	Logger::channel(INFO) << "Sending TCP message: " << sending_msg;
+	client_socket->write(sending_msg.data(), sending_msg.size(), [](bool) {});
 
-	some_client->send(sending_msg);
-	std::string received_msg = server_last_client->receive();
+	// Receive the message on server side.
+	std::vector<char> received_msg_data(sending_msg.size());
+	bool reading_complete = false;
+	server_side_socket->read(received_msg_data.data(), received_msg_data.size(), [&reading_complete](bool) {
+		reading_complete = true;
+	});
+	// Wait until message is read from socket.
+	while (!reading_complete);
 
+	const std::string received_msg(received_msg_data.cbegin(), received_msg_data.cend());
 	Logger::channel(INFO) << "Received TCP message: " << received_msg;
 
-	if (sending_msg != received_msg) {
+	// Check that sent and received messages are equal.
+	if (sending_msg == received_msg) {
+		Logger::channel(INFO) << "TCP test OK";
+	} else {
 		Logger::channel(ERR) << "Received message not equal to sending message!";
-		return;
 	}
-	Logger::channel(INFO) << "TCP test OK";
+
+	tasks->stop();
+	tasks_thread.join();
 }
+
 
 void test_chat()
 {
@@ -98,7 +115,8 @@ void test_chat()
 	ChatServer server(*server_addr);
 	std::thread s([&server] { server.run(); });
 
-	auto on_receive_msg = [](const int client_index, std::string* out_msg, const ChatMessageSPtr& message) {
+	typedef std::shared_ptr<std::string> string_sptr;
+	auto on_receive_msg = [](const int client_index, string_sptr out_msg, const ChatMessageSPtr& message) {
 		Logger::channel(INFO) << "Client " << client_index << " got message: " << message->data();
 		*out_msg = std::string(message->data());
 	};
@@ -106,7 +124,7 @@ void test_chat()
 		Logger::channel(INFO) << "Client " << client_index << " closed connection.";
 	};
 
-	std::string* cl1_received_message = new std::string("empty1");
+	string_sptr cl1_received_message = std::make_shared<std::string>("message1");
 	ChatClient client1(
 			server_addr,
 			std::bind(on_receive_msg, 1, cl1_received_message, std::placeholders::_1),
@@ -114,7 +132,7 @@ void test_chat()
 	);
 	std::thread c1([&client1] { client1.run(); });
 
-	std::string* cl2_received_message = new std::string("empty2");
+	string_sptr cl2_received_message = std::make_shared<std::string>("message2");
 	ChatClient client2(
 			server_addr,
 			std::bind(on_receive_msg, 2, cl2_received_message, std::placeholders::_1),
@@ -151,17 +169,21 @@ void test_chat()
 	c2.join();
 
 	// Check sent and received strings
-	if (cl1_sending_message != *cl2_received_message) {
+	const bool is_cl1_message_ok = cl1_sending_message == *cl2_received_message;
+	if (!is_cl1_message_ok) {
 		Logger::channel(ERR) << "cl1_sending_message != cl2_received_message :\n"
 							 << "cl1_sending_message = " << cl1_sending_message << "\n"
 							 << "cl2_received_message = " << *cl2_received_message;
 	}
-	if (cl2_sending_message != *cl1_received_message) {
+	const bool is_cl2_message_ok = cl2_sending_message == *cl1_received_message;
+	if (!is_cl2_message_ok) {
 		Logger::channel(ERR) << "cl2_sending_message != cl1_received_message :\n"
 							 << "cl2_sending_message = " << cl2_sending_message << "\n"
 							 << "cl1_received_message = " << *cl1_received_message;
 	}
-
-	delete cl1_received_message;
-	delete cl2_received_message;
+	if (is_cl1_message_ok && is_cl2_message_ok) {
+		Logger::channel(INFO) << "TEST OK";
+	} else {
+		Logger::channel(ERR) << "TEST FAILED";
+	}
 }

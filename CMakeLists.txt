@@ -8,6 +8,9 @@ if (WIN32)
     set(TARGET_BUILD_PLATFORM windows)
 else()
     set(TARGET_BUILD_PLATFORM linux)
+
+    # TODO Make linux implementation.
+    message(FATAL_ERROR "Linux implementation has not been supported yet. CMake will exit.")
 endif()
 message("Target platform: " ${TARGET_BUILD_PLATFORM})
 

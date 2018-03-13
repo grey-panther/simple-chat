@@ -19,7 +19,14 @@ namespace sockets
 	typedef std::shared_ptr<IServerSocketTCP> IServerSocketTCPSPtr;
 	typedef std::weak_ptr<IServerSocketTCP> IServerSocketTCPWPtr;
 
+	class ISocketUDP;
+	typedef std::shared_ptr<ISocketUDP> ISocketUDPSPtr;
+
 	class TasksProcessor;
+	typedef std::shared_ptr<TasksProcessor> TasksProcessorSPtr;
+
+	class ITasksQueue;
+	typedef std::shared_ptr<ITasksQueue> ITasksQueueSPtr;
 }
 
 #endif

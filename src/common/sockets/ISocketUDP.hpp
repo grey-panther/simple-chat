@@ -9,8 +9,7 @@ namespace sockets
 	class ISocketUDP : public ISocket
 	{
 	public:
-		ISocketUDP(TasksProcessor& tasks_processor) : ISocket(tasks_processor)
-		{}
+		~ISocketUDP() override = default;
 
 		virtual void send_to(const std::string& message, const ISocketAddress& address) const = 0;
 

@@ -11,50 +11,30 @@ namespace sockets
 {
 	class ClientSocketTCP : public IClientSocketTCP, protected SocketBase
 	{
-		std::shared_ptr<std::thread> _read_thread;
+		std::shared_ptr<std::thread> _reading_thread;
 		std::atomic<bool> _is_reading;
-//		char* _read_data;
-//		std::size_t _read_data_size;
-//		on_complete_callback_t _on_read_complete;
 
 	public:
-		ClientSocketTCP(TasksProcessor& tasks_processor)
-				: SocketBase(SOCK_STREAM)
-				, IClientSocketTCP(tasks_processor)
-				, _is_reading(false)
-		{}
+		explicit ClientSocketTCP(const ITasksQueueSPtr& tasks_queue);
 
-
-		ClientSocketTCP(TasksProcessor& tasks_processor, SOCKET socket)
-				: SocketBase(socket)
-				, IClientSocketTCP(tasks_processor)
-				, _is_reading(false)
-		{}
-
+		ClientSocketTCP(const ITasksQueueSPtr& tasks_queue, SOCKET socket);
 
 		~ClientSocketTCP() override;
 
-
 		void set_address(const ISocketAddress& address) override
-		{ return set_address_impl(address); }
-
+		{ return SocketBase::set_address(address); }
 
 		void connect(const ISocketAddress& server_address, const on_complete_callback_t& on_complete) override;
 
+		void read(char* data, std::size_t size, const on_complete_callback_t& on_complete) override;
 
-		void send(const std::string& message) override {};
-
-
-		std::string receive() const override {};
-
-
-		void read(char* data, const std::size_t size, const on_complete_callback_t& on_complete) override;
-
-
-		void write(const char* data, const std::size_t size, const on_complete_callback_t& on_complete) const override;
+		void write(const char* data, std::size_t size, const on_complete_callback_t& on_complete) const override;
 
 	private:
-		void do_read(char* data, const std::size_t data_size,
+		/**
+		 * @brief Read data from socket in loop.
+		 */
+		void do_read(char* data, std::size_t data_size,
 					 const IClientSocketTCP::on_complete_callback_t& on_complete);
 	};
 }

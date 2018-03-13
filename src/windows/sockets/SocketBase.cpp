@@ -1,16 +1,18 @@
 #include "SocketBase.hpp"
 #include "Logger.hpp"
+#include "sockets/ITasksQueue.hpp"
+#include "sockets/SocketAddress.hpp"
 
 
 namespace sockets
 {
-	static std::size_t __sockets_count = 0;
+	std::size_t SocketBase::__sockets_count = 0;
 
 
 	void initialize_windows_sockets()
 	{
-		WSADATA data;					// Socket Data
-		WORD version = MAKEWORD(2, 0);	// Winsock interface version
+		WSADATA data;					// Socket Data.
+		WORD version = MAKEWORD(2, 0);	// Winsock interface version.
 
 		if (FAILED(WSAStartup(version, &data))) {
 			Logger::channel(ERR) << "Windows sockets initialization error.";
@@ -26,24 +28,28 @@ namespace sockets
 	}
 
 
-	SocketBase::SocketBase(socket_type_t socket_type)
+	SocketBase::SocketBase(const ITasksQueueSPtr& tasks_queue, const socket_type_t& socket_type)
+			: _tasks_queue(tasks_queue)
 	{
+		// Windows sockets should be initialized before being used.
 		if (__sockets_count == 0) {
 			initialize_windows_sockets();
 		}
 		++__sockets_count;
 
 		// Create socket
-		_socket = socket(PF_INET, socket_type, 0);
+		_socket = ::socket(PF_INET, socket_type, 0);
 		if (_socket == INVALID_SOCKET) {
 			handle_error(SocketErrorGroup::OPEN, WSAGetLastError());
 		}
 	}
 
 
-	SocketBase::SocketBase(SOCKET socket)
-			: _socket(socket)
+	SocketBase::SocketBase(const ITasksQueueSPtr& tasks_queue, const SOCKET& socket)
+			: _tasks_queue(tasks_queue)
+			, _socket(socket)
 	{
+		// Windows sockets should be initialized before being used.
 		if (__sockets_count == 0) {
 			initialize_windows_sockets();
 		}
@@ -58,6 +64,7 @@ namespace sockets
 			handle_error(SocketErrorGroup::CLOSE, WSAGetLastError());
 		}
 
+		// Windows sockets should be released, if they are not needed more.
 		--__sockets_count;
 		if (__sockets_count < 1) {
 			release_windows_sockets();
@@ -65,13 +72,19 @@ namespace sockets
 	}
 
 
-	void SocketBase::set_address_impl(const ISocketAddress& address)
+	void SocketBase::set_address(const ISocketAddress& address)
 	{
 		int error = bind(_socket, address.inet_sockaddr(), address.inet_sockaddr_size());
 
 		if (error == SOCKET_ERROR) {
 			handle_error(SocketErrorGroup::SET_ADDR, WSAGetLastError());
 		}
+	}
+
+
+	void SocketBase::execute_callback(const any_function_t& callback) const
+	{
+		_tasks_queue->add_task(callback);
 	}
 
 
@@ -125,6 +138,7 @@ namespace sockets
 							 << "\tError code: " << error_code << "\n"
 							 << "\tDescription: " << description;
 
-		LocalFree(description);		// Recommends to use function HeapFree(GetProcessHeap(), s) in win10 sdk.
+		// There are recommendations to use function HeapFree(GetProcessHeap(), s) instead of LocalFree() in win10.
+		LocalFree(description);
 	}
 }

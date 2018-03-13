@@ -1,4 +1,5 @@
 #include "TasksProcessor.hpp"
+#include "Logger.hpp"
 #ifdef WIN32
 #include <mingw.thread.h>
 #else
@@ -8,54 +9,50 @@
 
 namespace sockets
 {
-	void TasksProcessor::remove_socket()
+	TasksProcessor::TasksProcessor()
+			: _is_stopped(true)
+	{}
+
+
+	TasksProcessor::~TasksProcessor()
 	{
-		if (_registered_sockets_count < 1) {
-			Logger::channel(ERR) << "Trying remove unregistered socket";
-			return;
-		}
-		--_registered_sockets_count;
+		stop();
 	}
 
 
 	void TasksProcessor::run()
 	{
-		while (!_is_terminated) {
-			while (_tasks.size()) {
+		_is_stopped = false;
+
+		while (!_is_stopped) {
+			while (!_tasks.empty()) {
 				_tasks_mutex.lock();
 				_current_task = _tasks.front();
-				_tasks.pop();
+				_tasks.pop_front();
 				_tasks_mutex.unlock();
 
 				process(_current_task);
 
 				_current_task.reset();
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(16));
+			static const int THREAD_SLEEP_DURATION_MS = 16;
+			std::this_thread::sleep_for(std::chrono::milliseconds(THREAD_SLEEP_DURATION_MS));
 		}
 	}
 
 
-	void TasksProcessor::add_task(const ISocketWPtr& socket, const TasksProcessor::any_function_t& func)
+	void TasksProcessor::add_task(const TasksProcessor::any_function_t& func)
 	{
-		if (_is_terminated) {
-			Logger::channel(WARN) << "Attempt to add task to stopped tasks processor!";
-			return;
-		}
-
 		_tasks_mutex.lock();
-		_tasks.push(std::make_shared<task_t>(socket, func));
+		_tasks.push_back(std::make_shared<task_t>(func));
 		_tasks_mutex.unlock();
 	}
 
 
-	void TasksProcessor::process(const TasksProcessor::task_sptr_t task)
+	void TasksProcessor::process(const TasksProcessor::task_sptr_t& task)
 	{
-//		if (!task || task->first.expired()) {
-		if (!task) {
-			return;
+		if (task) {
+			(*task)();
 		}
-
-		task->second();
 	}
 }

@@ -1,9 +1,9 @@
 #ifndef SIMPLE_CHAT_CHATCLIENT_HPP
 #define SIMPLE_CHAT_CHATCLIENT_HPP
 
-#include <sockets/forwards.hpp>
-#include <sockets/TasksProcessor.hpp>
 #include "forwards.hpp"
+#include "sockets/forwards.hpp"
+#include <atomic>
 
 
 class ChatClient
@@ -11,7 +11,7 @@ class ChatClient
 	typedef std::function<void(const ChatMessageSPtr& message)> on_message_received_t;
 	typedef std::function<void()> on_connection_closed_t;
 
-	sockets::TasksProcessor _sockets_tasks_processor;
+	sockets::TasksProcessorSPtr _sockets_tasks_processor;
 	sockets::IClientSocketTCPSPtr _socket;
 	sockets::ISocketAddressSPtr _server_address;
 	on_message_received_t _on_message_received;
@@ -31,7 +31,7 @@ public:
 
 	void send(const ChatMessageSPtr& message);
 
-	inline bool connected()
+	inline bool connected() const
 	{ return _is_connected; }
 
 private:

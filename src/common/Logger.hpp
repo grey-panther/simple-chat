@@ -29,14 +29,14 @@ class Logger {
 		~Message() override;
 	};
 
-	static std::mutex cout_mutex;
-	static bool _enabled;
+	static std::mutex __cout_mutex;
+	static bool __enabled;
 
 public:
 	static Message channel(const LogChanel& chanel);
 
 	static void set_enabled(const bool value)
-	{ _enabled = value; }
+	{ __enabled = value; }
 
 private:
 	static void print(const Message& msg);

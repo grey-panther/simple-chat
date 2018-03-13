@@ -1,7 +1,8 @@
 #include "ChatClient.hpp"
+#include "sockets/ClientSocketTCP.hpp"
 #include "sockets/SocketAddress.hpp"
 #include "sockets/SocketFactory.hpp"
-#include "sockets/ClientSocketTCP.hpp"
+#include "sockets/TasksProcessor.hpp"
 #include "ChatMessage.hpp"
 
 
@@ -10,7 +11,8 @@ ChatClient::ChatClient(
 		const on_message_received_t& on_message_received,
 		const on_connection_closed_t& on_connection_closed
 )
-		: _server_address(server_address)
+		: _sockets_tasks_processor(new sockets::TasksProcessor)
+		, _server_address(server_address)
 		, _on_message_received(on_message_received)
 		, _on_connection_closed(on_connection_closed)
 		, _is_connected(false)
@@ -21,13 +23,13 @@ ChatClient::ChatClient(
 
 void ChatClient::run()
 {
-	if (!_socket || _sockets_tasks_processor.terminated()) {
-		Logger::channel(WARN) << "ChatClient::run(). Cannot run client: terminated before start.";
+	if (!_socket) {
+		Logger::channel(WARN) << "Cannot run client: socket is not created.";
 		return;
 	}
 
 	if (!_server_address) {
-		Logger::channel(ERR) << "ChatClient::run(). Cannot run client: need server address.";
+		Logger::channel(ERR) << "Cannot run client: need server address.";
 		return;
 	}
 
@@ -42,14 +44,14 @@ void ChatClient::run()
 		do_receive();
 	});
 
-	_sockets_tasks_processor.run();
+	_sockets_tasks_processor->run();
 }
 
 
 void ChatClient::stop()
 {
 	_is_connected = false;
-	_sockets_tasks_processor.stop();
+	_sockets_tasks_processor->stop();
 	_socket.reset();
 	_server_address.reset();
 	_on_connection_closed();

@@ -21,10 +21,10 @@ void ChatRoom::send_to_all(const ChatMessageSPtr& message, const ChatParticipant
 	Logger::channel(INFO) << "ChatRoom::send_to_all()" << " Send message for all: " << message->data();
 	Logger::channel(INFO) << "ChatRoom::send_to_all()" << " participants count = " << _participants.size();
 
-	for (auto participant : _participants) {
-		if (participant == sender) continue;
-
-		participant->deliver(message);
+	for (auto& participant : _participants) {
+		if (participant != sender) {
+			participant->deliver(message);
+		}
 	}
 }
 
